@@ -57,7 +57,7 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 # =========================
 # LLM
 # =========================
-def get_llm(model="solar-pro"):
+def get_llm(model="solar-pro3"):
     return ChatUpstage(model=model)
 
 
@@ -180,6 +180,9 @@ def get_guide_chain():
 - 절대 사용자가 한 말을 무시하지 마라
 - 사용자가 말한 말에 따라서 답변해라 그 이유는 절대 말하지마라
 - 사용자에게 답변한 이유를 사용자에가 절대 말하지마라
+- 괄호로 절대 설명을 덧붙이지 마라
+- 메타 설명, 해설, 주석을 절대 출력하지 마라
+- 오직 사용자에게 하는 말만 출력하라
 입력 유형: {type}
 사용자 입력: {input}
 """)
@@ -435,10 +438,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
         if count == 0:
             return string_to_stream("더 이상 추천할 사용자가 없습니다.")
 
-        result += (
-    "\n더 많은 사용자를 보고 싶다면 '더 보여줘'라고 말해 주세요."
-    "\n고민을 조금 더 자세히 말해주면 더 비슷한 사람을 찾아드릴 수 있어요."
-)
+
 
 
         return string_to_stream(result)
@@ -561,10 +561,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
 
     set_seen_ids(session_id, seen_ids)
 
-    result += (
-    "\n더 많은 사용자를 보고 싶다면 '더 보여줘'라고 말해 주세요."
-    "\n고민을 조금 더 자세히 말해주면 더 비슷한 사람을 찾아드릴 수 있어요."
-)
+
 
 
     return string_to_stream(result)
