@@ -82,7 +82,11 @@ def get_retriever(user_province: str, user_city: str):
     )
 
     vectorstore = PineconeVectorStore(
+<<<<<<< HEAD
         index_name="jichini-user-index-dev",
+=======
+        index_name="test-data-index",
+>>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
         embedding=embeddings,
         pinecone_api_key=os.environ["PINECONE_API_KEY"],
     )
@@ -182,8 +186,12 @@ def get_guide_chain():
 - 괄호로 절대 설명을 덧붙이지 마라
 - 메타 설명, 해설, 주석을 절대 출력하지 마라
 - 오직 사용자에게 하는 말만 출력하라
+<<<<<<< HEAD
 - 왜 이런답변을 작성했는지 절대 말하지 마라.
 
+=======
+                                                                                           
+>>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
 입력 유형: {type}
 사용자 입력: {input}
 """)
@@ -386,29 +394,29 @@ def string_to_stream(text):
 # =========================
 def get_ai_response(user_message, user_province, user_city, session_id="default"):
     classifier = get_classification_chain()
-    intent_chain = get_intent_chain()
-    merge_chain = get_merge_chain()
     guide_chain = get_guide_chain()
     llm = get_llm()
 
     # =========================
     # 0️⃣ 더보기 요청 (최우선)
     # =========================
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
     if is_more_request(user_message):
         prev = get_session_concern(session_id)
 
         if not prev:
             return string_to_stream("먼저 고민을 입력해 주세요.")
 
-        # 정상 more 로직
         retriever = get_history_retriever(user_province, user_city)
-
         docs = retriever.invoke({
             "input": prev,
             "chat_history": []
         })
 
+<<<<<<< HEAD
 
 
         seen_ids = get_seen_ids(session_id)
@@ -417,12 +425,14 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
 
 
 
+=======
+        seen_ids = get_seen_ids(session_id) or set()
+>>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
         result = ""
         count = 0
 
         for doc in docs:
             uid = doc.metadata['user_id']
-
             if uid in seen_ids:
                 continue
 
@@ -433,7 +443,6 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
                 f"- 고민: {doc.metadata.get('concern', '')}\n"
                 f"- 상세 고민: {doc.metadata.get('detail_concern', '')}\n\n"
             )
-
             seen_ids.add(uid)
             count += 1
 
@@ -443,20 +452,13 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
         set_seen_ids(session_id, seen_ids)
 
         if count == 0:
-            return string_to_stream("더 이상 추천할 사용자가 없습니다.")
+            return string_to_stream("더 이상 추천할 사용자가 없어요.\n고민을 더 구체적으로 말해주면 다른 사람을 찾아볼게요!")
 
-        result += (
-    "\n더 많은 사용자를 보고 싶다면 '더 보여줘'라고 말해 주세요."
-    "\n고민을 조금 더 자세히 말해주면 더 비슷한 사람을 찾아드릴 수 있어요."
-)
-
-
+        result += "\n더 많은 사용자를 보고 싶다면 '더 보여줘'라고 말해 주세요.\n고민을 조금 더 자세히 말해주면 더 비슷한 사람을 찾아드릴 수 있어요."
         return string_to_stream(result)
 
-
-
     # =========================
-    # 1️⃣ category 먼저 판단
+    # 1️⃣ classification
     # =========================
     category = classifier.invoke({"input": user_message}).content.strip()
     category = category.replace("\n", "").strip()
@@ -474,34 +476,33 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
         })
 
     # =========================
-    # 3️⃣ 고민일 때만 intent 판단
+    # 3️⃣ 고민이면 이어붙이기
     # =========================
-    intent = intent_chain.invoke({"input": user_message}).content.strip().lower()
+    prev = get_session_concern(session_id)
 
-    if intent == "feedback":
-        intent = "feedback"
+    if prev:
+        current_concern = f"{prev}\n사용자 피드백: {user_message}"
     else:
-        intent = "concern"
-
-    # =========================
-    # 4️⃣ concern / feedback 처리
-    # =========================
-    if intent == "concern":
         current_concern = user_message
-
-    elif intent == "feedback":
-        prev = get_session_concern(session_id)
-
-        if not prev:
-            current_concern = user_message
-        else:
-            merged = merge_chain.invoke({
-                "original": prev,
-                "feedback": user_message
-            })
-            current_concern = merged.content.strip()
+        set_seen_ids(session_id, set())  # ✅ 새 고민 시작 → seen_ids 초기화
 
     # =========================
+    # 4️⃣ concern_score 검사
+    # =========================
+    score = get_concern_score(llm, current_concern)
+    print("concern score:", score)
+
+    if score < 5:
+        guide_result = guide_chain.invoke({
+            "input": current_concern,
+            "type": "고민 부족"
+        })
+        return string_to_stream(
+            guide_result.content if hasattr(guide_result, 'content') else str(guide_result)
+        )
+
+    # =========================
+<<<<<<< HEAD
     # 고민 품질 검사
     # =========================
     score = get_concern_score(llm, current_concern)
@@ -521,35 +522,37 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
 
     # =========================
     # 🔥 점수 통과한 경우만 저장
+=======
+    # 5️⃣ 점수 통과 → 저장
+>>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
     # =========================
     set_session_concern(session_id, current_concern)
 
     # =========================
-    # 5️⃣ retriever
+    # 6️⃣ retriever
     # =========================
     retriever = get_history_retriever(user_province, user_city)
-
     docs = retriever.invoke({
         "input": current_concern,
         "chat_history": []
     })
 
     if not docs:
+<<<<<<< HEAD
         return string_to_stream("현재 고민의 맞는 사용자가 없습니다.")
+=======
+        return string_to_stream("현재 고민에 맞는 사용자가 없습니다.")
+>>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
 
     # =========================
-    # 6️⃣ 결과 출력
+    # 7️⃣ 결과 출력
     # =========================
-    seen_ids = get_seen_ids(session_id)
-    if not seen_ids:
-        seen_ids = set()
-
+    seen_ids = get_seen_ids(session_id) or set()
     result = ""
     count = 0
 
     for doc in docs:
         uid = doc.metadata['user_id']
-
         if uid in seen_ids:
             continue
 
@@ -560,7 +563,6 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
             f"- 고민: {doc.metadata.get('concern', '')}\n"
             f"- 상세 고민: {doc.metadata.get('detail_concern', '')}\n\n"
         )
-
         seen_ids.add(uid)
         count += 1
 
@@ -568,6 +570,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
             break
 
     if count == 0:
+<<<<<<< HEAD
         return string_to_stream("현재 고민의 맞는 사용자가 없습니다.")
 
     set_seen_ids(session_id, seen_ids)
@@ -578,5 +581,12 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
 )
 
 
+=======
+        return string_to_stream("현재 고민에 맞는 사용자가 없습니다.")
+
+    set_seen_ids(session_id, seen_ids)
+
+    result += "\n더 많은 사용자를 보고 싶다면 '더 보여줘'라고 말해 주세요.\n고민을 조금 더 자세히 말해주면 더 비슷한 사람을 찾아드릴 수 있어요."
+>>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
     return string_to_stream(result)
 #     python -m uvicorn main:app —reload —port 5000
