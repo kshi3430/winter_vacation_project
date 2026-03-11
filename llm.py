@@ -82,11 +82,7 @@ def get_retriever(user_province: str, user_city: str):
     )
 
     vectorstore = PineconeVectorStore(
-<<<<<<< HEAD
-        index_name="jichini-user-index-dev",
-=======
         index_name="test-data-index",
->>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
         embedding=embeddings,
         pinecone_api_key=os.environ["PINECONE_API_KEY"],
     )
@@ -186,12 +182,7 @@ def get_guide_chain():
 - 괄호로 절대 설명을 덧붙이지 마라
 - 메타 설명, 해설, 주석을 절대 출력하지 마라
 - 오직 사용자에게 하는 말만 출력하라
-<<<<<<< HEAD
-- 왜 이런답변을 작성했는지 절대 말하지 마라.
-
-=======
                                                                                            
->>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
 입력 유형: {type}
 사용자 입력: {input}
 """)
@@ -400,10 +391,6 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
     # =========================
     # 0️⃣ 더보기 요청 (최우선)
     # =========================
-<<<<<<< HEAD
-
-=======
->>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
     if is_more_request(user_message):
         prev = get_session_concern(session_id)
 
@@ -416,18 +403,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
             "chat_history": []
         })
 
-<<<<<<< HEAD
-
-
-        seen_ids = get_seen_ids(session_id)
-        if not seen_ids:
-            seen_ids = set()
-
-
-
-=======
         seen_ids = get_seen_ids(session_id) or set()
->>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
         result = ""
         count = 0
 
@@ -440,8 +416,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
                 f"- 사용자 ID: {uid}\n"
                 f"- 시/도: {doc.metadata['province']}\n"
                 f"- 시/군: {doc.metadata['city']}\n"
-                f"- 고민: {doc.metadata.get('concern', '')}\n"
-                f"- 상세 고민: {doc.metadata.get('detail_concern', '')}\n\n"
+                f"- 고민 내용: {doc.page_content}\n\n"
             )
             seen_ids.add(uid)
             count += 1
@@ -502,29 +477,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
         )
 
     # =========================
-<<<<<<< HEAD
-    # 고민 품질 검사
-    # =========================
-    score = get_concern_score(llm, current_concern)
-    print("concern score:", score)
-
-    if score < 5:
-        set_session_concern(session_id, current_concern)
-        guide_result = guide_chain.invoke({
-            "input": current_concern,
-            "type": "고민 부족"
-        })
-
-        return string_to_stream(
-            guide_result.content if hasattr(guide_result, 'content') else str(guide_result)
-        )
-
-
-    # =========================
-    # 🔥 점수 통과한 경우만 저장
-=======
     # 5️⃣ 점수 통과 → 저장
->>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
     # =========================
     set_session_concern(session_id, current_concern)
 
@@ -538,11 +491,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
     })
 
     if not docs:
-<<<<<<< HEAD
-        return string_to_stream("현재 고민의 맞는 사용자가 없습니다.")
-=======
         return string_to_stream("현재 고민에 맞는 사용자가 없습니다.")
->>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
 
     # =========================
     # 7️⃣ 결과 출력
@@ -560,8 +509,7 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
             f"- 사용자 ID: {uid}\n"
             f"- 시/도: {doc.metadata['province']}\n"
             f"- 시/군: {doc.metadata['city']}\n"
-            f"- 고민: {doc.metadata.get('concern', '')}\n"
-            f"- 상세 고민: {doc.metadata.get('detail_concern', '')}\n\n"
+            f"- 고민 내용: {doc.page_content}\n\n"
         )
         seen_ids.add(uid)
         count += 1
@@ -570,23 +518,11 @@ def get_ai_response(user_message, user_province, user_city, session_id="default"
             break
 
     if count == 0:
-<<<<<<< HEAD
-        return string_to_stream("현재 고민의 맞는 사용자가 없습니다.")
-
-    set_seen_ids(session_id, seen_ids)
-
-    result += (
-    "\n더 많은 사용자를 보고 싶다면 '더 보여줘'라고 말해 주세요."
-    "\n고민을 조금 더 자세히 말해주면 더 비슷한 사람을 찾아드릴 수 있어요."
-)
-
-
-=======
         return string_to_stream("현재 고민에 맞는 사용자가 없습니다.")
 
     set_seen_ids(session_id, seen_ids)
 
     result += "\n더 많은 사용자를 보고 싶다면 '더 보여줘'라고 말해 주세요.\n고민을 조금 더 자세히 말해주면 더 비슷한 사람을 찾아드릴 수 있어요."
->>>>>>> 4dfced7 (더 보여줘 기능 부분을 수정함.)
     return string_to_stream(result)
 #     python -m uvicorn main:app —reload —port 5000
+# 123
