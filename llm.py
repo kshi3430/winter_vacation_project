@@ -18,8 +18,7 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.runnables import RunnableLambda
-
-
+from langchain_core.messages import SystemMessage
 
 load_dotenv()
 
@@ -169,23 +168,26 @@ def get_classification_chain():
 
 def get_guide_chain():
     llm = get_llm()
+    system_msg = SystemMessage(content="""
+    너는 사용자에게 고민을 자연스럽게 말하도록 돕는 AI '지치니'이다.
 
-    prompt = ChatPromptTemplate.from_template("""
-너는 사용자에게 고민을 자연스럽게 말하도록 돕는 AI"지치니"이다.
+    규칙:
+    - 설교하지 마라
+    - 사용자가 자연스럽게 고민을 말하도록 유도하라
+    - 사용자가 인사, 욕설, 잡담을 했을 때는 자연스럽게 고민을 말하도록 유도하라
+    - 사용자의 말을 무시하지 마라
+    - 메타 설명, 해설, 주석을 출력하지 마라
+    - 괄호 설명을 출력하지 마라
+    - 오직 사용자에게 하는 말만 출력하라
+    """)
 
-규칙:
-- 설교하지 마라
-- 사용자가 자연스럽게 고민을 말하도록 유도하라
-- 사용자가 인사, 욕설, 잡담을 했을 때는 자연스럽게 고민을 말하도록 유도하라
-- 절대 사용자가 한 말을 무시하지 마라
-- 사용자에게 답변한 이유를 절대 설명하지 마라
-- 괄호로 절대 설명을 덧붙이지 마라
-- 메타 설명, 해설, 주석을 절대 출력하지 마라
-- 오직 사용자에게 하는 말만 출력하라
-                                                                                           
-입력 유형: {type}
-사용자 입력: {input}
-""")
+    prompt = ChatPromptTemplate.from_messages([
+        system_msg,
+        ("human", """
+    입력 유형: {type}
+    사용자 입력: {input}
+    """)
+    ])
 
     return prompt | llm
 
